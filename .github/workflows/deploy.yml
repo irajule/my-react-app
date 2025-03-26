@@ -1,0 +1,40 @@
+name: Deploy to AWS S3
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch (can be any branch you use)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Runs on the latest Ubuntu
+
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js (to build React app)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Use the Node.js version of your choice
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Build the React app
+      - name: Build the app
+        run: npm run build
+
+      # Step 5: Deploy to AWS S3
+      - name: Deploy to AWS S3
+        uses: jakejarvis/s3-sync-action@v0.5.1  # GitHub Action to sync files to S3
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Store AWS keys in GitHub Secrets
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: 'us-east-2'  # Change this to your region
+          bucket_name: 'learnawsaws'  # Your bucket name
+          source_dir: './build'  # Path to your build directory
+          delete: true  # Optional: Delete files in S3 not in the build folder
