@@ -39,4 +39,4 @@ jobs:
         aws-region: us-east-2
 
     - name: Deploy to S3 Production
-      run: aws s3 sync build/ s3://learnawsaws-production --delete
+      run: aws s3 sync build/ s3://learnawsaws --delete
