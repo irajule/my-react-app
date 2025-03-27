@@ -39,4 +39,5 @@ jobs:
         aws-region: us-east-2
 
     - name: Deploy to S3 Production
+      if: github.ref == 'refs/heads/master'
       run: aws s3 sync build/ s3://learnawsaws --delete
