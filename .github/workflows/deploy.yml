@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - master
-      - staging  # if you want to track PRs from other branches too
+      - staging  # If you want to track PRs for other branches too
 
 jobs:
   deploy:
@@ -30,6 +30,13 @@ jobs:
 
     - name: Build Application
       run: npm run build
+
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
 
     - name: Deploy to S3 Production
       run: aws s3 sync build/ s3://learnawsaws-production --delete
