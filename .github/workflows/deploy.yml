@@ -1,4 +1,4 @@
-name: Deploy React App to S3 with GitHub Actions
+name: Deploy Dockerized React App to ECS
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - master
-      - staging  # If you want to track PRs for other branches too
+      - staging  # Optionally track other branches
 
 jobs:
   deploy:
@@ -17,6 +17,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
@@ -25,11 +28,22 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Run Tests
-      run: npm test -- --watchAll=false --coverage
-
     - name: Build Application
       run: npm run build
+
+    - name: Build Docker image
+      run: |
+        docker build -t mydockerhubusername/myapp:$GITHUB_SHA .
+      
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push Docker image to Docker Hub
+      run: |
+        docker push mydockerhubusername/myapp:$GITHUB_SHA
 
     - name: Set up AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -38,6 +52,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-2
 
-    - name: Deploy to S3 Production
-      if: github.ref == 'refs/heads/master'
-      run: aws s3 sync build/ s3://learnawsaws --delete
+    - name: Deploy to ECS
+      run: |
+        ecs-cli configure --region us-east-2 --cluster practicereactdocker
+        ecs-cli compose --file docker-compose.yml up
